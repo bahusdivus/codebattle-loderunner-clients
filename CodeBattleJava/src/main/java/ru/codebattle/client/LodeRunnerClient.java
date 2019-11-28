@@ -12,30 +12,22 @@ import java.util.Random;
 
 public class LodeRunnerClient extends LoderunnerBase {
 
-    private Function<GameBoard, LoderunnerAction> callback;
+    private Player player;
 
     public LodeRunnerClient(String serverAddress, String user, String code) throws URISyntaxException {
         super(serverAddress, user, code);
     }
 
-    public void run(Function<GameBoard, LoderunnerAction> callback) {
+    public void run(Player player) {
         connect();
-        this.callback = callback;
+        this.player = player;
     }
 
     @Override
     protected String doMove(GameBoard gameBoard) {
-        clearScreen();
-        gameBoard.printBoard();
-        Random random = new Random(System.currentTimeMillis());
-        LoderunnerAction action = callback.apply(gameBoard);
+        LoderunnerAction action = player.decide(gameBoard);
         System.out.println(action.toString());
         return loderunnerActionToString(action);
-    }
-
-    public void clearScreen() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
     }
 
     public void initiateExit()
