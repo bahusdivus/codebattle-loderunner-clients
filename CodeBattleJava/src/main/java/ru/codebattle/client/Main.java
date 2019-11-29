@@ -12,7 +12,7 @@ public class Main {
     public static void main(String[] args) throws URISyntaxException, IOException {
         LodeRunnerClient client = new LodeRunnerClient(SERVER_ADDRESS, PLAYER_NAME, AUTH_CODE);
 
-        client.run(new Player());
+        client.run(Player.getInstance());
 
         System.in.read();
 
