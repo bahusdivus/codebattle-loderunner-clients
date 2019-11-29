@@ -62,6 +62,19 @@ class BoardElementHelper {
         }
     }
 
+    boolean isOtherPlayer(BoardPoint point) {
+        BoardElement element = board.getElementAt(point);
+        switch (element) {
+            case OTHER_HERO_LEFT:
+            case OTHER_HERO_RIGHT:
+            case OTHER_HERO_SHADOW_LEFT:
+            case OTHER_HERO_SHADOW_RIGHT:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     boolean isPipe(BoardPoint point) {
         BoardElement element = board.getElementAt(point);
         switch (element) {

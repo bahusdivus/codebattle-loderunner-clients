@@ -4,26 +4,29 @@ import ru.codebattle.client.api.BoardPoint;
 import ru.codebattle.client.api.GameBoard;
 import ru.codebattle.client.api.LoderunnerAction;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-import static ru.codebattle.client.api.LoderunnerAction.DO_NOTHING;
-import static ru.codebattle.client.api.LoderunnerAction.GO_DOWN;
-import static ru.codebattle.client.api.LoderunnerAction.GO_LEFT;
-import static ru.codebattle.client.api.LoderunnerAction.GO_RIGHT;
-import static ru.codebattle.client.api.LoderunnerAction.GO_UP;
+import static ru.codebattle.client.api.LoderunnerAction.*;
 
 class Direction {
-    private static final Set<BoardPoint> visitedPoints = new HashSet<>();
-    static LoderunnerAction action = DO_NOTHING;
-    private static BoardElementHelper helper;
+    private final Set<BoardPoint> visitedPoints = new HashSet<>();
+    LoderunnerAction action = DO_NOTHING;
+    private BoardElementHelper helper;
+    private final GameBoard board;
 
-    private Direction() {
+    private Direction(GameBoard board) {
+        this.board = board;
+        visitedPoints.addAll(board.getOtherHeroPositions());
+        visitedPoints.addAll(board.getEnemyPositions());
     }
 
-    static void navigate(Directions from, BoardPoint myPosition, BoardPoint destination, GameBoard board) {
+    static Direction of(GameBoard board) {
+        return new Direction(board);
+    }
+
+    void navigate(Directions from, BoardPoint myPosition, BoardPoint destination) {
         if (helper == null) helper = BoardElementHelper.of(board);
-        if (!isValidDestination(destination)) return;
+        if (notValidDestination(destination)) return;
 
         if (myPosition.equals(destination)) {
             action = goToDirection(from);
@@ -33,34 +36,94 @@ class Direction {
 
         visitedPoints.add(destination);
 
-        findFurtherWay(from, myPosition, destination, board);
+        findFurtherWay(from, myPosition, destination);
 
     }
 
-    private static void findFurtherWay(Directions from, BoardPoint myPosition, BoardPoint destination, GameBoard board) {
-        if (helper.isSurface(destination.shiftBottom()) || helper.isPipe(destination)) {
+    Deque<LoderunnerAction> navigateRefined(Directions from, BoardPoint myPosition, BoardPoint destination) {
+        if (helper == null) helper = BoardElementHelper.of(board);
+        if (notValidDestination(destination)) return null;
+
+        if (myPosition.equals(destination)) {
+            Deque<LoderunnerAction> actions = new ArrayDeque<>();
+            actions.offer(goToDirection(from));
+            return actions;
+        }
+
+        visitedPoints.add(destination);
+        Deque<LoderunnerAction> actions = findFurtherWayRefined(from, myPosition, destination);
+        if (from != null && actions != null) actions.offer(goToDirection(from));
+        return actions;
+    }
+
+    private Deque<LoderunnerAction> findFurtherWayRefined(Directions from, BoardPoint myPosition, BoardPoint destination) {
+        Deque<LoderunnerAction> actions = null;
+        if (helper.isSurface(destination.shiftBottom())
+                || helper.isSurface(destination.shiftBottom().shiftLeft())
+                || helper.isSurface(destination.shiftBottom().shiftRight())
+                || helper.isPipe(destination)) {
             if (helper.isLadder(destination.shiftBottom()) && from != Directions.DOWN) {
-                navigate(Directions.UP, myPosition, destination.shiftBottom(), board);
+                actions = navigateRefined(Directions.UP, myPosition, destination.shiftBottom());
             }
-            if (action.equals(DO_NOTHING) && from != Directions.LEFT) {
-                navigate(Directions.RIGHT, myPosition, destination.shiftLeft(), board);
+            if (actions == null && from != Directions.LEFT
+                    && helper.isSurface(destination.shiftBottom().shiftLeft())) {
+                actions = navigateRefined(Directions.RIGHT, myPosition, destination.shiftLeft());
             }
-            if (action.equals(DO_NOTHING) && from != Directions.RIGHT) {
-                navigate(Directions.LEFT, myPosition, destination.shiftRight(), board);
+            if (actions == null && from != Directions.RIGHT
+                    && helper.isSurface(destination.shiftBottom().shiftRight())) {
+                actions = navigateRefined(Directions.LEFT, myPosition, destination.shiftRight());
+            }
+            if (actions == null && from != Directions.UP) {
+                actions = navigateRefined(Directions.DOWN, myPosition, destination.shiftTop());
+            }
+        } else {
+            if (from != Directions.UP) {
+                actions = navigateRefined(Directions.DOWN, myPosition, destination.shiftTop());
             }
         }
-        if (action.equals(DO_NOTHING) && from != Directions.UP) {
-            navigate(Directions.DOWN, myPosition, destination.shiftTop(), board);
+
+        return actions;
+    }
+
+    LoderunnerAction getAction() {
+        LoderunnerAction returnValue = action;
+        action = DO_NOTHING;
+        return returnValue;
+    }
+
+    private void findFurtherWay(Directions from, BoardPoint myPosition, BoardPoint destination) {
+        if (helper.isSurface(destination.shiftBottom())
+                || helper.isSurface(destination.shiftBottom().shiftLeft())
+                || helper.isSurface(destination.shiftBottom().shiftRight())
+                || helper.isPipe(destination)) {
+            if (helper.isLadder(destination.shiftBottom()) && from != Directions.DOWN) {
+                navigate(Directions.UP, myPosition, destination.shiftBottom());
+            }
+            if (action.equals(DO_NOTHING) && from != Directions.LEFT
+                    && helper.isSurface(destination.shiftBottom().shiftLeft())) {
+                navigate(Directions.RIGHT, myPosition, destination.shiftLeft());
+            }
+            if (action.equals(DO_NOTHING) && from != Directions.RIGHT
+                    && helper.isSurface(destination.shiftBottom().shiftRight())) {
+                navigate(Directions.LEFT, myPosition, destination.shiftRight());
+            }
+            if (action.equals(DO_NOTHING) && from != Directions.UP) {
+                navigate(Directions.DOWN, myPosition, destination.shiftTop());
+            }
+        } else {
+            if (action.equals(DO_NOTHING) && from != Directions.UP) {
+                navigate(Directions.DOWN, myPosition, destination.shiftTop());
+            }
         }
     }
 
-    private static boolean isValidDestination(BoardPoint destination) {
-        return destination != null
-                && !visitedPoints.contains(destination)
-                && !helper.isWall(destination);
+    private boolean notValidDestination(BoardPoint destination) {
+        return destination == null
+                || visitedPoints.contains(destination)
+                || helper.isWall(destination);
     }
 
-    private static LoderunnerAction goToDirection(Directions from) {
+    private LoderunnerAction goToDirection(Directions from) {
         switch (from) {
             case UP:
                 return GO_UP;
