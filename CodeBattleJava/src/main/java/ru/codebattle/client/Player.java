@@ -10,12 +10,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import static ru.codebattle.client.api.LoderunnerAction.DO_NOTHING;
+import static ru.codebattle.client.api.LoderunnerAction.SUICIDE;
 
 @Slf4j
 class Player {
 
     private Player() {}
     private Deque<LoderunnerAction> loderunnerActions = null;
+    private int doNothingCount = 0;
 
     static Player getInstance() {
         return new Player();
@@ -35,22 +37,16 @@ class Player {
             }
         }
         if (loderunnerActions == null || loderunnerActions.peek() == null) {
-            return LoderunnerAction.SUICIDE;
+            if (doNothingCount++ <= 10) {
+                return DO_NOTHING;
+            }
+            doNothingCount = 0;
+            return SUICIDE;
         }
 
-/*
-        direction.navigate(null, myPosition, nearestGold);
-        while (direction.action.equals(DO_NOTHING) && !goldPositions.isEmpty()) {
-            goldPositions.remove(nearestGold);
-            nearestGold = getNearestPoint(myPosition, goldPositions);
-            direction.navigate(null, myPosition, nearestGold);
+        while (loderunnerActions.size() > 5) {
+            loderunnerActions.removeLast();
         }
-        LoderunnerAction action = direction.getAction();
-        if (action.equals(DO_NOTHING)) {
-            return LoderunnerAction.SUICIDE;
-        }
-*/
-
         return loderunnerActions.poll();
     }
 

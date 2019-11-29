@@ -10,7 +10,6 @@ import static ru.codebattle.client.api.LoderunnerAction.*;
 
 class Direction {
     private final Set<BoardPoint> visitedPoints = new HashSet<>();
-    LoderunnerAction action = DO_NOTHING;
     private BoardElementHelper helper;
     private final GameBoard board;
 
@@ -22,22 +21,6 @@ class Direction {
 
     static Direction of(GameBoard board) {
         return new Direction(board);
-    }
-
-    void navigate(Directions from, BoardPoint myPosition, BoardPoint destination) {
-        if (helper == null) helper = BoardElementHelper.of(board);
-        if (notValidDestination(destination)) return;
-
-        if (myPosition.equals(destination)) {
-            action = goToDirection(from);
-            visitedPoints.clear();
-            return;
-        }
-
-        visitedPoints.add(destination);
-
-        findFurtherWay(from, myPosition, destination);
-
     }
 
     Deque<LoderunnerAction> navigateRefined(Directions from, BoardPoint myPosition, BoardPoint destination) {
@@ -83,38 +66,6 @@ class Direction {
         }
 
         return actions;
-    }
-
-    LoderunnerAction getAction() {
-        LoderunnerAction returnValue = action;
-        action = DO_NOTHING;
-        return returnValue;
-    }
-
-    private void findFurtherWay(Directions from, BoardPoint myPosition, BoardPoint destination) {
-        if (helper.isSurface(destination.shiftBottom())
-                || helper.isSurface(destination.shiftBottom().shiftLeft())
-                || helper.isSurface(destination.shiftBottom().shiftRight())
-                || helper.isPipe(destination)) {
-            if (helper.isLadder(destination.shiftBottom()) && from != Directions.DOWN) {
-                navigate(Directions.UP, myPosition, destination.shiftBottom());
-            }
-            if (action.equals(DO_NOTHING) && from != Directions.LEFT
-                    && helper.isSurface(destination.shiftBottom().shiftLeft())) {
-                navigate(Directions.RIGHT, myPosition, destination.shiftLeft());
-            }
-            if (action.equals(DO_NOTHING) && from != Directions.RIGHT
-                    && helper.isSurface(destination.shiftBottom().shiftRight())) {
-                navigate(Directions.LEFT, myPosition, destination.shiftRight());
-            }
-            if (action.equals(DO_NOTHING) && from != Directions.UP) {
-                navigate(Directions.DOWN, myPosition, destination.shiftTop());
-            }
-        } else {
-            if (action.equals(DO_NOTHING) && from != Directions.UP) {
-                navigate(Directions.DOWN, myPosition, destination.shiftTop());
-            }
-        }
     }
 
     private boolean notValidDestination(BoardPoint destination) {
