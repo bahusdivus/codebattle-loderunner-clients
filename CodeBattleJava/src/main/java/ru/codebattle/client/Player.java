@@ -18,6 +18,8 @@ class Player {
     private Player() {}
     private Deque<LoderunnerAction> loderunnerActions = null;
     private int doNothingCount = 0;
+    private static final int MAX_ROUTE_LENGHT = 3;
+    private static final int MAX_DO_NOTHING = 15;
 
     static Player getInstance() {
         return new Player();
@@ -28,6 +30,7 @@ class Player {
         List<BoardPoint> goldPositions = gameBoard.getGoldPositions();
         BoardPoint nearestGold = getNearestPoint(myPosition, goldPositions);
         Direction direction = Direction.of(gameBoard);
+
         if (loderunnerActions == null || loderunnerActions.peek() == null) {
             loderunnerActions = direction.navigateRefined(null, myPosition, nearestGold);
             while ((loderunnerActions == null || loderunnerActions.peek() == null) && !goldPositions.isEmpty()) {
@@ -37,14 +40,16 @@ class Player {
             }
         }
         if (loderunnerActions == null || loderunnerActions.peek() == null) {
-            if (doNothingCount++ <= 10) {
+            if (doNothingCount++ <= MAX_DO_NOTHING) {
                 return DO_NOTHING;
             }
             doNothingCount = 0;
             return SUICIDE;
+        } else {
+            doNothingCount = 0;
         }
 
-        while (loderunnerActions.size() > 5) {
+        while (loderunnerActions.size() > MAX_ROUTE_LENGHT) {
             loderunnerActions.removeLast();
         }
         return loderunnerActions.poll();

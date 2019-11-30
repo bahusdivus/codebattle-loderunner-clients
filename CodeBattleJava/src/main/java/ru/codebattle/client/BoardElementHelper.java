@@ -19,6 +19,10 @@ class BoardElementHelper {
         return instance;
     }
 
+    boolean enemyOrOther(BoardPoint myPosition) {
+        return isOtherPlayer(myPosition) || isOtherEnemy(myPosition);
+    }
+
     boolean isSurface(BoardPoint point) {
         if (isLadder(point)) return true;
         BoardElement element = board.getElementAt(point);
@@ -30,6 +34,8 @@ class BoardElementHelper {
             case PIT_FILL_3:
             case PIT_FILL_4:
             case DRILL_PIT:
+            case OTHER_HERO_LEFT:
+            case OTHER_HERO_RIGHT:
                 return true;
             default:
                 return false;
@@ -67,8 +73,19 @@ class BoardElementHelper {
         switch (element) {
             case OTHER_HERO_LEFT:
             case OTHER_HERO_RIGHT:
-            case OTHER_HERO_SHADOW_LEFT:
-            case OTHER_HERO_SHADOW_RIGHT:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    boolean isOtherEnemy(BoardPoint point) {
+        BoardElement element = board.getElementAt(point);
+        switch (element) {
+            case ENEMY_LEFT:
+            case ENEMY_RIGHT:
+            case ENEMY_PIPE_LEFT:
+            case ENEMY_PIPE_RIGHT:
                 return true;
             default:
                 return false;
