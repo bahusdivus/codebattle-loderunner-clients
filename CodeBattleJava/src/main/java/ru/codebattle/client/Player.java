@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import static ru.codebattle.client.api.LoderunnerAction.DO_NOTHING;
+import static ru.codebattle.client.api.LoderunnerAction.GO_LEFT;
+import static ru.codebattle.client.api.LoderunnerAction.GO_RIGHT;
 import static ru.codebattle.client.api.LoderunnerAction.SUICIDE;
 
 @Slf4j
@@ -18,8 +20,8 @@ class Player {
     private Player() {}
     private Deque<LoderunnerAction> loderunnerActions = null;
     private int doNothingCount = 0;
-    private static final int MAX_ROUTE_LENGHT = 3;
-    private static final int MAX_DO_NOTHING = 15;
+    private static final int MAX_ROUTE_LENGHT = 5;
+    private static final int MAX_DO_NOTHING = 120;
 
     static Player getInstance() {
         return new Player();
@@ -30,7 +32,8 @@ class Player {
         List<BoardPoint> goldPositions = gameBoard.getGoldPositions();
         BoardPoint nearestGold = getNearestPoint(myPosition, goldPositions);
         Direction direction = Direction.of(gameBoard);
-
+        if (goldPositions.contains(myPosition.shiftLeft())) return GO_LEFT;
+        if (goldPositions.contains(myPosition.shiftRight())) return GO_RIGHT;
         if (loderunnerActions == null || loderunnerActions.peek() == null) {
             loderunnerActions = direction.navigateRefined(null, myPosition, nearestGold);
             while ((loderunnerActions == null || loderunnerActions.peek() == null) && !goldPositions.isEmpty()) {

@@ -123,6 +123,7 @@ class Direction {
     private boolean notValidDestination(BoardPoint destination) {
         return destination == null
                 || visitedPoints.contains(destination)
+                || helper.enemyOrOther(destination)
                 || helper.isWall(destination);
     }
 

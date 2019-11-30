@@ -29,11 +29,6 @@ class BoardElementHelper {
         switch (element) {
             case BRICK:
             case UNDESTROYABLE_WALL:
-            case PIT_FILL_1:
-            case PIT_FILL_2:
-            case PIT_FILL_3:
-            case PIT_FILL_4:
-            case DRILL_PIT:
             case OTHER_HERO_LEFT:
             case OTHER_HERO_RIGHT:
                 return true;
